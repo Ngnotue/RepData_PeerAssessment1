@@ -1,25 +1,172 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: 'Peer-graded Assignment: Course Project 1'
+author: "Ngnotue"
+date: "02/ 09/ 2019"
+output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
 
 ## Loading and preprocessing the data
 
-
-
+### 1. We laod and read the csv file
+```{r}
+data <- read.csv("activity.csv", header=TRUE)
+```
 ## What is mean total number of steps taken per day?
 
+### 1. We Subset the original data to calculate the total number of steps
+```{r}
+totalStepsByDay <- aggregate(steps~date, data, sum)
+head(totalStepsByDay)
+```
+### 2. We make a histogram of the total number of steps taken each day
+```{r}
+hist(totalStepsByDay$steps, col = "red"
+     , xlab = "Steps", main = "Total Number of Steps Per Day")
+```
+### 3. We determine and report the mean and median total number of steps taken per day
 
+#### a. Mean
+```{r}
+mean1 <- mean(totalStepsByDay$steps)
+```
+```{r}
+mean1
+```
+
+#### b. Median
+```{r}
+median1 <- median(totalStepsByDay$steps)
+```
+```{r}
+median1
+```
 
 ## What is the average daily activity pattern?
 
+### 1. We subset the original data to calculate the average number of steps taken of the 5-minute interval
+```{r}
+averageSteps <- aggregate(steps~interval, data, mean)
+head(averageSteps)
+```
 
+### 2. We make a time series plot
+```{r}
+with(averageSteps, plot(interval, steps
+                        , type="l", main="Average number of steps taken in 5-min interval"
+                        , col = "turquoise4")) 
+```
+
+#### the maximum data is:
+```{r}
+max <- max(averageSteps$steps)
+max
+```
+
+#### The interval contains max data is:
+```{r}
+subsetData <- subset(averageSteps, steps == max)
+subsetData
+subsetData$interval
+```
 
 ## Imputing missing values
 
+### 1. Calculate and report the total number of missing values
+```{r}
+colSums(is.na(data))
+```
+### 2. Create a new column "newSteps"
+```{r}
+data$newSteps <- averageSteps$steps
+head(data)
+```
+### 3. Fill in the missing data
 
+```{r}
+data$steps[is.na(data$steps)] <- data$newSteps
+```
+### 4. Create a new dataset
+```{r}
+data$newSteps <- NULL
+newdata <- data
+head(newdata)
+```
+### 5. Subset in the new data set to calculate the total number of steps per day
+```{r}
+sumdata <- aggregate(steps~date, newdata, sum)
+head(sumdata)
+```
+### 6. Make a histogram
+```{r}
+hist(sumdata$steps, col = "blue"
+     , xlab = "Steps"
+     , main = "Total Number of Steps Per Day (with the missing data filled in)")
+```
+### 7. Calculate and report the mean and median
+
+#### a. Mean
+```{r}
+mean2 <- mean(sumdata$steps)
+```
+```{r}
+mean2
+```
+
+#### b. Median
+```{r}
+median2 <- median(sumdata$steps)
+```
+```{r}
+median2
+```
+
+#8. Calculate the differences
+```{r}
+mean2 - mean1
+```
+```{r}
+median2 - median1
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+#load the timeDate package
+# install.packages("timeDate")
+```{r}
+library(timeDate)
+```
+### 1. Create a new column, and use the isWeekday() function to check if the date is weekday or weekend
+```{r}
+newdata$Weekday <- isWeekday(newdata$date)
+head(newdata)
+```
+
+### 2. Subset and calculate the average steps for weekday and weekend
+```{r}
+weekday <- subset(newdata, newdata$Weekday == "TRUE")
+weekdayMean <- aggregate(steps ~ interval, data = weekday, mean)
+head(weekdayMean)
+```
+```{r}
+weekend <- subset(newdata, newdata$Weekday == "FALSE")
+weekendMean <- aggregate(steps ~ interval, data = weekend, mean)
+head(weekendMean)
+```
+### 3. We Make the panel plot to calculate the average number of steps taken for weekday 
+```{r}
+layout(matrix(c(1,1,2,2), 2, 2, byrow = TRUE))
+```
+```{r}
+plot(weekdayMean$interval, weekdayMean$steps
+     , xlab = "interval", ylab = "Number of steps"
+     , main ="Weekday", col ="yellow", type="l") 
+```
+###4. We Make the panel plot to calculate the average number of steps taken for  weekend
+```{r}
+plot(weekendMean$interval, weekendMean$steps
+     , xlab = "interval", ylab = "Number of steps"
+     , main ="Weekend", col ="darkgreen", type="l")
+```
